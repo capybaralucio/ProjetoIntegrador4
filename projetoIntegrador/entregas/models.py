@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Motorista(models.Model):
@@ -10,10 +11,11 @@ class Motorista(models.Model):
         E = 'E', 'E'
 
     class Status_motorista(models.TextChoices):
-        ATIVO = 'A', 'Veículo ativo'
-        INATIVO = 'I', 'Veículo inativo'
-        EM_ROTA = 'R', 'Veículo em rota'
-        DISPONIVEL = 'D', 'Veículo disponível'
+        ATIVO = 'A', 'Motorista ativo'
+        INATIVO = 'I', 'Motorista inativo'
+        EM_ROTA = 'R', 'Motorista em rota'
+        DISPONIVEL = 'D', 'Motorista disponível'
+
 
     cpf = models.CharField(max_length=11, primary_key=True)
     nome_motorista = models.CharField(max_length=200, null=False)
@@ -29,6 +31,7 @@ class Motorista(models.Model):
         choices=Status_motorista.choices,
         default=Status_motorista.DISPONIVEL
     )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.nome_motorista
@@ -75,6 +78,9 @@ class Cliente(models.Model):
     estado = models.CharField(max_length=100, null=False)
     bairro = models.CharField(max_length=200, null=False)
     cep = models.CharField(max_length=8, null=False)
+    telefone = models.CharField(max_length=15, null=False)
+    email = models.EmailField(max_length=100, null=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True) 
 
     def __str__(self):
         return self.nome_cliente
@@ -92,9 +98,9 @@ class Rota(models.Model):
     motorista = models.ForeignKey(Motorista, on_delete=models.CASCADE, null=False)
     veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, null=False)
     data_rota = models.DateField(null=False)
-    capacidade_total_utilizada = models.IntegerField(null=False)
-    km_total_estimado = models.CharField(max_length=100, null=False)
-    tempo_estimado = models.TimeField(null=False)
+    capacidade_total_utilizada = models.IntegerField(default=0)
+    km_total_estimado = models.IntegerField(null=False)
+    tempo_estimado = models.DurationField(null=False)
     status_rota = models.CharField(
         max_length=1,
         choices=Status_rota.choices,
@@ -117,7 +123,7 @@ class Entrega(models.Model):
     data_entrega_real = models.DateField(null=True, blank=True)
     capacidade_necessaria = models.IntegerField(null=False) 
     endereco_origem = models.CharField(max_length=100, null=False)
-    observacoes = models.CharField(max_length=300, null=False)
+    observacoes = models.CharField(max_length=300, null=True, blank=True)
     endereco_destino = models.CharField(max_length=100, null=False)
     valor_frete = models.DecimalField(max_digits=5, decimal_places=2)
     data_entrega_prevista = models.DateField(null=False)
