@@ -1,0 +1,13 @@
+python -m venv meuAmbiente
+meuAmbiente\Scripts\activate
+pip install django
+pip install djangorestframework
+pip install django-filter
+pip install drf-spectacular[swagger-ui]
+pip install drf-spectacular[sidecar]
+
+
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+python manage.py createsuperuser

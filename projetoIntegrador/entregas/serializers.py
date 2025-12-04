@@ -48,10 +48,9 @@ class RotaSerializer(serializers.ModelSerializer):
         entregas = Entrega.objects.filter(rota=rota) if rota else []
         capacidade_utilizada = sum(e.capacidade_necessaria for e in entregas)
 
-        # se usuário enviou capacidade_total_utilizada no body, usa ela
         nova_capacidade = data.get("capacidade_total_utilizada", capacidade_utilizada)
 
-        if nova_capacidade > capacidade_max:
+        if nova_capacidade > capacidade_max: 
             raise serializers.ValidationError({
                 "capacidade_total_utilizada": (
                     f"A capacidade total ({nova_capacidade}) excede a capacidade "
