@@ -54,7 +54,7 @@ class Veiculo(models.Model):
     modelo = models.CharField(max_length=200, null=False)
     capacidade_maxima = models.IntegerField( null=False)
     km_atual = models.IntegerField(null=False)
-    motorista_ativo = models.ForeignKey(Motorista, on_delete=models.CASCADE)
+    motorista_ativo = models.ForeignKey(Motorista, on_delete=models.SET_NULL, null=True, blank=True, unique=True)
     tipo = models.CharField(
         max_length=1,
         choices=Tipo.choices,
