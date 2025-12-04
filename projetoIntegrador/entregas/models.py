@@ -95,7 +95,7 @@ class Rota(models.Model):
     clientes = models.ManyToManyField(Cliente)
     nome_rota = models.CharField(max_length=200, null=False)
     descricao = models.CharField(max_length=300, null=False)
-    motorista = models.ForeignKey(Motorista, on_delete=models.CASCADE, null=False)
+    motorista = models.ForeignKey(Motorista, on_delete=models.CASCADE, null=False) 
     veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, null=False)
     data_rota = models.DateField(null=False)
     capacidade_total_utilizada = models.IntegerField(default=0)
