@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import inspect
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,13 +42,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
-    'corsheaders',
     'drf_spectacular',
     
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -129,7 +128,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -143,4 +141,33 @@ REST_FRAMEWORK = {
     'django_filters.rest_framework.DjangoFilterBackend',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de Entregas',
+    'DESCRIPTION': inspect.cleandoc("""
+    ## Bem-vindo à API de Entregas!
+    - **Listar Entregas** (`GET /api/entregas/`) sem autenticação
+    - **Criar Entregas** (`POST /api/entregas/`) com autenticação
+    - **Atualizar Entregas** (`PUT/PATCH /api/entregas/{id}/`) com autenticação
+    - **Excluir Entregas** (`DELETE /api/entregas/{id}/`) com autenticação
+    ### Autenticação
+    Use o endpoint `/api/token/` para obter seu token e inclua no cabeçalho:
+    ```
+    Authorization: Token <sua_chave>
+    ```
+    """),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SECURITY': [{'TokenAuth': []}],
+    'COMPONENTS': {
+    'securitySchemes': {
+    'TokenAuth': {
+    'type': 'apiKey',
+    'in': 'header',
+    'name': 'Authorization',
+    'description': 'Use o formato: Token <sua_chave>',
+    },
+    },
+    },
 }

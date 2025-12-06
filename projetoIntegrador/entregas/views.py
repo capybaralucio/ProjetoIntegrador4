@@ -4,6 +4,7 @@ from .serializers import MotoristaSerializer, VeiculoSerializer, ClienteSerializ
 from .permissions import IsAdmin, IsMotorista, IsCliente
 from rest_framework.authentication import TokenAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 class MotoristaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -46,10 +47,19 @@ class VeiculoViewSet(viewsets.ModelViewSet):
     
 class ClienteViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsCliente | IsAdmin]
+    #permission_classes = [IsCliente | IsAdmin]
     
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            # Permitir acesso público para requisições GET (pesquisa/filtros)
+            permission_classes = [AllowAny]
+        else:
+            # Para POST, PUT, DELETE, aplicar permissão customizada
+            permission_classes = [IsCliente | IsAdmin]
+        return [permission() for permission in permission_classes]
     
     def get_queryset(self): # restringe o acesso conforme o usuário
         user = self.request.user

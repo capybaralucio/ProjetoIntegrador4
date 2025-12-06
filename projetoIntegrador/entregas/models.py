@@ -54,7 +54,7 @@ class Veiculo(models.Model):
     modelo = models.CharField(max_length=200, null=False)
     capacidade_maxima = models.IntegerField( null=False)
     km_atual = models.IntegerField(null=False)
-    motorista_ativo = models.ForeignKey(Motorista, on_delete=models.CASCADE)
+    motorista_ativo = models.ForeignKey(Motorista, on_delete=models.SET_NULL, null=True, blank=True, unique=True)
     tipo = models.CharField(
         max_length=1,
         choices=Tipo.choices,
@@ -95,7 +95,7 @@ class Rota(models.Model):
     clientes = models.ManyToManyField(Cliente)
     nome_rota = models.CharField(max_length=200, null=False)
     descricao = models.CharField(max_length=300, null=False)
-    motorista = models.ForeignKey(Motorista, on_delete=models.CASCADE, null=False)
+    motorista = models.ForeignKey(Motorista, on_delete=models.CASCADE, null=False) 
     veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, null=False)
     data_rota = models.DateField(null=False)
     capacidade_total_utilizada = models.IntegerField(default=0)
