@@ -1,0 +1,6 @@
+codigo_rastreio,data_entrega_real,capacidade_necessaria,endereco_origem,observacoes,endereco_destino,valor_frete,data_entrega_prevista,data_solicitacao,cliente,rota,status
+"ABC12345678,2025-12-05,50,""Rua A, 123"",""Rua B, 456"",25.50,2025-12-10,2025-12-01,11111111111,Rota Centro,P"
+"DEF23456789,30,""Rua C, 789"",""Aguardando confirmação"",""Rua D, 321"",15.75,2025-12-12,2025-12-02,22222222222,Rota Sul,T"
+"GHI34567890,2025-12-08,20,""Rua E, 654"",""Rua F, 987"",30.00,2025-12-14,2025-12-05,33333333333,Rota Norte,E"
+"JKL45678901,40,""Rua G, 321"",""Cliente solicitou remarcação"",""Rua H, 123"",22.00,2025-12-16,2025-12-08,44444444444,Rota Sul,R"
+"MNO56789012,60,""Rua I, 789"",""Rua J, 456"",28.50,2025-12-18,2025-12-10,55555555555,Rota Centro,C"

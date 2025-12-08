@@ -1,0 +1,4 @@
+nome_rota,descricao,motorista,veiculo,data_rota,capacidade_total_utilizada,km_total_estimado,tempo_estimado,status_rota,clientes
+"Rota Centro,Entrega na região central,11111111111,ABC1A11,2025-12-01,150,500,02:30:00,P,11111111111;22222222222"
+"Rota Sul,Entrega na região sul,33333333333,BCD2B22,2025-12-02,200,750,03:00:00,A,33333333333;44444444444;55555555555"
+"Rota Norte,Entrega na região norte,66666666666,CDE3C33,2025-12-03,180,600,02:45:00,C,66666666666;77777777777"
