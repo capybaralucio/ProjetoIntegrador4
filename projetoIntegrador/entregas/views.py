@@ -75,7 +75,13 @@ def vincular_motorista(self, request, pk=None):
 # ------------------- CLIENTE ------------------------
 class ClienteViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
+<<<<<<< HEAD
     
+=======
+    #permission_classes = [IsCliente | IsAdmin]
+    filter_backends = [DjangoFilterBackend]
+    queryset = Cliente.objects.all()
+>>>>>>> afe82bd150129fc7af1b7165c3bc04de58929681
     serializer_class = ClienteSerializer
     queryset = Cliente.objects.all()
 
@@ -120,23 +126,39 @@ class RotaViewSet(viewsets.ModelViewSet):
 # ------------------- ENTREGA ------------------------
 class EntregaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAdmin | IsMotorista | IsCliente]
+    permission_classes = [IsAdmin | IsMotorista | IsCliente] 
     
     queryset = Entrega.objects.all()
     serializer_class = EntregaSerializer  
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["status", "rota"]
+    filterset_fields = ['codigo_rastreio']
+    
+    def get_permissions(self):
+        if self.request.method == "GET":
+            # Qualquer pessoa pode consultar entregas pelo código
+            permission_classes = [AllowAny]
+        else:
+            # POST/PUT/DELETE apenas para usuários logados/admin
+            permission_classes = [IsCliente | IsAdmin]
+        return [permission() for permission in permission_classes] 
     
     def get_queryset(self):
+        # Usuário não logado só consegue buscar por código
+        if self.request.method == "GET" and not self.request.user.is_authenticated:
+            codigo = self.request.query_params.get("codigo_rastreio", None)
+            if codigo:
+                return Entrega.objects.filter(codigo_rastreio=codigo)
+            return Entrega.objects.none()
+        # Usuário logado/admin vê suas entregas normalmente
         user = self.request.user
-
         if user.is_staff:
             return Entrega.objects.all()
-
-        if hasattr(user, "motorista"):
-            return Entrega.objects.filter(rota__motorista=user.motorista)
-
         if hasattr(user, "cliente"):
             return Entrega.objects.filter(cliente=user.cliente)
+<<<<<<< HEAD
 
         return Entrega.objects.none()  
+=======
+        return Entrega.objects.none() 
+    
+>>>>>>> afe82bd150129fc7af1b7165c3bc04de58929681
