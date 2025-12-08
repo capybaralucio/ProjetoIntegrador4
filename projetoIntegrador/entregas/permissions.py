@@ -18,7 +18,7 @@ class IsMotorista(BasePermission):
 class IsCliente(BasePermission):
     """Cliente só pode ver suas entregas."""
     def has_permission(self, request, view):
-        return hasattr(request.user, "cliente")
+        return hasattr(request.user, "cliente") 
 
 # class IsOwnerOrReadOnly(BasePermission):
 #     """
