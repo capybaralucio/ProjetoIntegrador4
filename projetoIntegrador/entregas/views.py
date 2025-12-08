@@ -1,11 +1,17 @@
-from rest_framework import viewsets, permissions
-from .models import Motorista, Veiculo, Cliente, Rota, Entrega
-from .serializers import MotoristaSerializer, VeiculoSerializer, ClienteSerializer, RotaSerializer, EntregaSerializer
-from .permissions import IsAdmin, IsMotorista, IsCliente
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from .models import Motorista, Veiculo, Cliente, Rota, Entrega
+from .serializers import (
+    MotoristaSerializer, VeiculoSerializer, ClienteSerializer,
+    RotaSerializer, EntregaSerializer
+)
+from .permissions import IsAdmin, IsMotorista, IsCliente
+
+# ------------------- MOTORISTA ------------------------
 class MotoristaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsMotorista | IsAdmin]
@@ -25,6 +31,7 @@ class MotoristaViewSet(viewsets.ModelViewSet):
 
         return Motorista.objects.none()
     
+# ------------------- VEICULO ------------------------
 class VeiculoViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsMotorista | IsAdmin]
@@ -45,21 +52,37 @@ class VeiculoViewSet(viewsets.ModelViewSet):
 
         return Veiculo.objects.none()   
     
+# ------------------- ação: VINCULAR MOTORISTA ----------------------
+@action(detal=True, methods=["post"], permission_classes=[IsAdmin])    
+def vincular_motorista(self, request, pk=None):
+    veiculo = self.get_object()
+    motoristas_cpf = request.data.get("motorista_cpf")
+
+    if not motorista_cpf:
+        return Response({"erro": "motorista_cpf é obrigatório"}, status=400)
+
+    try: 
+        motorista = Motorista.objects.get(cpf=motorista_cpf)
+    except Motorista.DoesNotExist:
+        return Response ({"erro": "Motorista não encontrado"}, status=404)
+
+    veiculo.motorista_ativo = motorista
+    veiculo.save()
+
+    return Response({"mensagem": "Motorista vinculado com sucesso!"})
+
+
+# ------------------- CLIENTE ------------------------
 class ClienteViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    #permission_classes = [IsCliente | IsAdmin]
     
-    queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
+    queryset = Cliente.objects.all()
 
     def get_permissions(self):
         if self.request.method == "GET":
-            # Permitir acesso público para requisições GET (pesquisa/filtros)
-            permission_classes = [AllowAny]
-        else:
-            # Para POST, PUT, DELETE, aplicar permissão customizada
-            permission_classes = [IsCliente | IsAdmin]
-        return [permission() for permission in permission_classes]
+            return [permission.IsAuthenticated()]
+        return [IsCliente() | IsAdmin()]
     
     def get_queryset(self): # restringe o acesso conforme o usuário
         user = self.request.user
@@ -73,6 +96,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 
         return Cliente.objects.none()
     
+# ------------------- ROTA ------------------------
 class RotaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAdmin | IsMotorista]
@@ -89,10 +113,11 @@ class RotaViewSet(viewsets.ModelViewSet):
             return Rota.objects.all()
 
         if hasattr(user, "motorista"):
-            return Rota.objects.filter(veiculo__motorista_ativo=user.motorista)
+            return Rota.objects.filter(motorista=user.motorista)
 
         return Rota.objects.none()
     
+# ------------------- ENTREGA ------------------------
 class EntregaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAdmin | IsMotorista | IsCliente]
@@ -115,4 +140,3 @@ class EntregaViewSet(viewsets.ModelViewSet):
             return Entrega.objects.filter(cliente=user.cliente)
 
         return Entrega.objects.none()  
-    

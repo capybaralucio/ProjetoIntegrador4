@@ -1,0 +1,11 @@
+placa,modelo,capacidade_maxima,km_atual,motorista,tipo,status_veiculo;;;;;;;;;;;;;;
+ABC1A11,Fiat Uno,300,50000,Marcos Silva,CARRO,DISPONIVEL;;;;;;;;;;;;;;
+BCD2B22,Volkswagen Kombi,800,75000,Lucas Rocha,VAN,EM_USO;;;;;;;;;;;;;;
+CDE3C33,Mercedes 608,3000,120000,Thiago Gomes,CAMINHAO,MANUTENCAO;;;;;;;;;;;;;;
+DEF4D44,Ford Ka,250,40000,Rodrigo Alves,CARRO,DISPONIVEL;;;;;;;;;;;;;;
+EFG5E55,Renault Master,1200,90000,Paulo Lima,VAN,EM_USO;;;;;;;;;;;;;;
+FGH6F66,Volvo FH,18000,300000,Renato Barros,CAMINHAO,DISPONIVEL;;;;;;;;;;;;;;
+HIJ7G77,Hyundai HR,1600,85000,Silas Pereira,CAMINHAO,DISPONIVEL;;;;;;;;;;;;;;
+JKL8H88,Chevrolet Spin,700,30000,Otavio Ramos,CARRO,EM_USO;;;;;;;;;;;;;;
+MNO9I99,Iveco Daily,2500,140000,Vitor Henriques,VAN,MANUTENCAO;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;

@@ -48,8 +48,7 @@ class Command(BaseCommand):
                         'modelo': row['modelo'],
                         'capacidade_maxima': int(row['capacidade_maxima']),
                         'km_atual': int(row['km_atual']),
-                        'motorista_ativo':
-                        motorista,
+                        'motorista_ativo': motorista,
                         'tipo': row['tipo'],
                         'status_veiculo': row['status_veiculo']
                     }

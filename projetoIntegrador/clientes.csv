@@ -1,0 +1,18 @@
+cpf_cliente,nome_cliente,endereco,cidade,estado,bairro,cep,telefone,email,user;
+"11111111111,Ana Silva,""Rua A, 123"",Brasilia,DF,Asa Norte,70000000,61999990001,ana@email.com,ana_s";
+"22222222222,Bruno Costa,""Rua B, 200"",Brasilia,DF,Asa Sul,70000001,61999990002,bruno@email.com,brunoc";
+"33333333333,Carla Mendes,""Rua C, 300"",Goiania,GO,Centro,74000000,62999990003,carla@email.com,carlam";
+"44444444444,Daniel Rocha,""Rua D, 400"",Ana¡polis,GO,Jundiai­,75000000,62999990004,daniel@email.com,danielr";
+"55555555555,Eduarda Lima,""Rua E, 500"",Sao Paulo,SP,Moema,04000000,11999990005,eduarda@email.com,edl";
+"66666666666,Felipe Torres,""Rua F, 600"",Rio de Janeiro,RJ,Copacabana,22000000,21999990006,felipe@email.com,f_t";
+"77777777777,Gabriela Souza,""Rua G, 700"",Salvador,BA,Barra,40140000,71999990007,gabi@email.com,gabis";
+"88888888888,Heitor Alves,""Rua H, 800"",Recife,PE,Boa Viagem,51000000,81999990008,heitor@email.com,heitor_a";
+"99999999999,Isabela Pires,""Rua I, 900"",Natal,RN,Ponta Negra,59000000,84999990009,isa@email.com,isap";
+"10101010101,Joao Pedro,""Rua J, 1000"",Fortaleza,CE,Meireles,60000000,85999990010,joao@email.com,jpedro";
+"12121212121,Karen Duarte,""Rua K, 1100"",Belo Horizonte,MG,Savassi,30100000,31999990011,karen@email.com,kdu";
+"13131313131,Leonardo Brito,""Rua L, 1200"",Curitiba,PR,Centro,80000000,41999990012,leo@email.com,leob";
+"14141414141,Mariana Queiroz,""Rua M, 1300"",Porto Alegre,RS,Moinhos,90000000,51999990013,mariana@email.com,mqa";
+"14141414141,Mariana Queiroz,""Rua M, 1300"",Porto Alegre,RS,Moinhos,90000000,51999990013,mariana@email.com,mqa";
+;
+;
+;

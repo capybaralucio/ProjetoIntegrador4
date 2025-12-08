@@ -66,6 +66,28 @@ class Veiculo(models.Model):
         default=Status_veiculo.DISPONIVEL
     )
 
+    def clean(self):
+        if self.motorista_ativo:
+            cnh = self.motorista_ativo.cnh
+            
+            compatibilidade = {
+                "1": ["B","C","D","E"],
+                "2": ["D","E"],
+                "3": ["C","E"]
+            }
+
+            tipos_validos = compatibilidade.get(self.tipo, [])
+
+            if cnh not in tipos_validos:
+                raise ValidationError(
+                    f"O motorista {self.motorista_ativo.nome_motorista} possui CNH {cnh},"
+                    f"mas o veículo {self.get_tipo_display()} exige: {', ' join(tipos_validos)}."
+                )
+
+def save(self, *args, **kwargs):
+    self.clean() #chama a validação antes de salvar
+    super().save(*args, **kwargs)
+
     def __str__(self):
         return self.placa
 
