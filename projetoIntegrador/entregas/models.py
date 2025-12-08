@@ -81,7 +81,7 @@ class Veiculo(models.Model):
             if cnh not in tipos_validos:
                 raise ValidationError(
                     f"O motorista {self.motorista_ativo.nome_motorista} possui CNH {cnh},"
-                    f"mas o veículo {self.get_tipo_display()} exige: {', ' join(tipos_validos)}."
+                    f"mas o veículo {self.get_tipo_display()} exige: {', ' .join(tipos_validos)}."
                 )
 
 def save(self, *args, **kwargs):

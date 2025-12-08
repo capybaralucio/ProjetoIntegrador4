@@ -1,6 +1,7 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from rest_framework.authentication import TokenAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -53,13 +54,13 @@ class VeiculoViewSet(viewsets.ModelViewSet):
         return Veiculo.objects.none()   
     
 # ------------------- ação: VINCULAR MOTORISTA ----------------------
-@action(detal=True, methods=["post"], permission_classes=[IsAdmin])    
+@action(detail=True, methods=["post"], permission_classes=[IsAdmin])    
 def vincular_motorista(self, request, pk=None):
     veiculo = self.get_object()
-    motoristas_cpf = request.data.get("motorista_cpf")
+    motorista_cpf = request.data.get("cpf")
 
     if not motorista_cpf:
-        return Response({"erro": "motorista_cpf é obrigatório"}, status=400)
+        return Response({"erro": "CPF do motorista é obrigatório"}, status=400)
 
     try: 
         motorista = Motorista.objects.get(cpf=motorista_cpf)
@@ -75,19 +76,13 @@ def vincular_motorista(self, request, pk=None):
 # ------------------- CLIENTE ------------------------
 class ClienteViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-<<<<<<< HEAD
-    
-=======
-    #permission_classes = [IsCliente | IsAdmin]
     filter_backends = [DjangoFilterBackend]
     queryset = Cliente.objects.all()
->>>>>>> afe82bd150129fc7af1b7165c3bc04de58929681
     serializer_class = ClienteSerializer
-    queryset = Cliente.objects.all()
 
     def get_permissions(self):
         if self.request.method == "GET":
-            return [permission.IsAuthenticated()]
+            return [permissions.IsAuthenticated()]
         return [IsCliente() | IsAdmin()]
     
     def get_queryset(self): # restringe o acesso conforme o usuário
@@ -155,10 +150,6 @@ class EntregaViewSet(viewsets.ModelViewSet):
             return Entrega.objects.all()
         if hasattr(user, "cliente"):
             return Entrega.objects.filter(cliente=user.cliente)
-<<<<<<< HEAD
 
         return Entrega.objects.none()  
-=======
-        return Entrega.objects.none() 
     
->>>>>>> afe82bd150129fc7af1b7165c3bc04de58929681
