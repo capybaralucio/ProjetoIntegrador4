@@ -1,6 +1,16 @@
-codigo_rastreio,data_entrega_real,capacidade_necessaria,endereco_origem,observacoes,endereco_destino,valor_frete,data_entrega_prevista,data_solicitacao,cliente,rota,status
-"ABC12345678,2025-12-05,50,""Rua A, 123"",""Rua B, 456"",25.50,2025-12-10,2025-12-01,11111111111,Rota Centro,P"
-"DEF23456789,30,""Rua C, 789"",""Aguardando confirma��o"",""Rua D, 321"",15.75,2025-12-12,2025-12-02,22222222222,Rota Sul,T"
-"GHI34567890,2025-12-08,20,""Rua E, 654"",""Rua F, 987"",30.00,2025-12-14,2025-12-05,33333333333,Rota Norte,E"
-"JKL45678901,40,""Rua G, 321"",""Cliente solicitou remarca��o"",""Rua H, 123"",22.00,2025-12-16,2025-12-08,44444444444,Rota Sul,R"
-"MNO56789012,60,""Rua I, 789"",""Rua J, 456"",28.50,2025-12-18,2025-12-10,55555555555,Rota Centro,C"
+codigo_rastreio,data_entrega_real,capacidade_necessaria,endereco_origem,observacoes,endereco_destino,valor_frete,data_entrega_prevista,data_solicitacao,cliente_cpf,rota_id,status
+ENT00000001,,100,Centro,Aguardando separação,Asa Norte,25.50,2024-04-05,2024-04-01,11111111111,1,P
+ENT00000002,,150,Centro,,Asa Norte,32.00,2024-04-05,2024-04-01,22222222222,1,P
+ENT00000003,2024-04-03,250,Centro,Entregue sem intercorrências,Asa Sul,41.00,2024-04-03,2024-04-01,33333333333,1,E
+
+ENT00000004,,300,Depósito,,Lago Sul,44.50,2024-04-06,2024-04-02,44444444444,2,T
+ENT00000005,,400,Depósito,Urgente,Lago Norte,55.00,2024-04-06,2024-04-02,55555555555,2,P
+
+ENT00000006,2024-04-04,500,CD Taguatinga,,Guará,60.00,2024-04-04,2024-04-03,66666666666,3,E
+ENT00000007,,350,CD Taguatinga,Cliente ausente,Taguatinga,38.00,2024-04-05,2024-04-03,77777777777,3,R
+ENT00000008,,400,CD Taguatinga,,Ceilândia,42.00,2024-04-05,2024-04-03,88888888888,3,P
+
+ENT00000009,,150,CD Sudoeste,,Sudoeste,20.00,2024-04-05,2024-04-04,99999999999,4,T
+ENT00000010,2024-04-04,150,CD Sudoeste,,Águas Claras,22.00,2024-04-04,2024-04-04,10101010101,4,E
+ENT00000011,,100,CD Sudoeste,Remarcada,Águas Claras,18.00,2024-04-06,2024-04-04,99999999999,4,R
+ENT00000012,,50,CD Sudoeste,,Sudoeste,15.00,2024-04-06,2024-04-04,10101010101,4,P

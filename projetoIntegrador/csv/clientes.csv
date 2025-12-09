@@ -1,18 +1,11 @@
-cpf_cliente,nome_cliente,endereco,cidade,estado,bairro,cep,telefone,email,user;
-"11111111111,Ana Silva,""Rua A, 123"",Brasilia,DF,Asa Norte,70000000,61999990001,ana@email.com,ana_s";
-"22222222222,Bruno Costa,""Rua B, 200"",Brasilia,DF,Asa Sul,70000001,61999990002,bruno@email.com,brunoc";
-"33333333333,Carla Mendes,""Rua C, 300"",Goiania,GO,Centro,74000000,62999990003,carla@email.com,carlam";
-"44444444444,Daniel Rocha,""Rua D, 400"",Ana�polis,GO,Jundiai�,75000000,62999990004,daniel@email.com,danielr";
-"55555555555,Eduarda Lima,""Rua E, 500"",Sao Paulo,SP,Moema,04000000,11999990005,eduarda@email.com,edl";
-"66666666666,Felipe Torres,""Rua F, 600"",Rio de Janeiro,RJ,Copacabana,22000000,21999990006,felipe@email.com,f_t";
-"77777777777,Gabriela Souza,""Rua G, 700"",Salvador,BA,Barra,40140000,71999990007,gabi@email.com,gabis";
-"88888888888,Heitor Alves,""Rua H, 800"",Recife,PE,Boa Viagem,51000000,81999990008,heitor@email.com,heitor_a";
-"99999999999,Isabela Pires,""Rua I, 900"",Natal,RN,Ponta Negra,59000000,84999990009,isa@email.com,isap";
-"10101010101,Joao Pedro,""Rua J, 1000"",Fortaleza,CE,Meireles,60000000,85999990010,joao@email.com,jpedro";
-"12121212121,Karen Duarte,""Rua K, 1100"",Belo Horizonte,MG,Savassi,30100000,31999990011,karen@email.com,kdu";
-"13131313131,Leonardo Brito,""Rua L, 1200"",Curitiba,PR,Centro,80000000,41999990012,leo@email.com,leob";
-"14141414141,Mariana Queiroz,""Rua M, 1300"",Porto Alegre,RS,Moinhos,90000000,51999990013,mariana@email.com,mqa";
-"14141414141,Mariana Queiroz,""Rua M, 1300"",Porto Alegre,RS,Moinhos,90000000,51999990013,mariana@email.com,mqa";
-;
-;
-;
+cpf_cliente,nome_cliente,endereco,cidade,estado,bairro,cep,telefone,email
+11111111111,Ana Souza,Rua A 123,Brasília,DF,Centro,70000000,61999990001,ana@example.com
+22222222222,Carlos Lima,Rua B 456,Brasília,DF,Asa Sul,70000001,61999990002,carlos@example.com
+33333333333,Mariana Torres,Rua C 789,Brasília,DF,Asa Norte,70000002,61999990003,mariana@example.com
+44444444444,Fernando Alves,Rua D 321,Brasília,DF,Lago Sul,70000003,61999990004,fernando@example.com
+55555555555,Juliana Rocha,Rua E 654,Brasília,DF,Lago Norte,70000004,61999990005,juliana@example.com
+66666666666,Ricardo Pinto,Rua F 987,Brasília,DF,Guará,70000005,61999990006,ricardo@example.com
+77777777777,Patrícia Gomes,Rua G 147,Brasília,DF,Taguatinga,70000006,61999990007,patricia@example.com
+88888888888,Roberto Silva,Rua H 258,Brasília,DF,Ceilândia,70000007,61999990008,roberto@example.com
+99999999999,Isabela Martins,Rua I 369,Brasília,DF,Sudoeste,70000008,61999990009,isabela@example.com
+10101010101,Thiago Duarte,Rua J 753,Brasília,DF,Aguas Claras,70000009,61999990010,thiago@example.com

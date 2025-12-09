@@ -1,4 +1,5 @@
-nome_rota,descricao,motorista,veiculo,data_rota,capacidade_total_utilizada,km_total_estimado,tempo_estimado,status_rota,clientes
-"Rota Centro,Entrega na regi„o central,11111111111,ABC1A11,2025-12-01,150,500,02:30:00,P,11111111111;22222222222"
-"Rota Sul,Entrega na regi„o sul,33333333333,BCD2B22,2025-12-02,200,750,03:00:00,A,33333333333;44444444444;55555555555"
-"Rota Norte,Entrega na regi„o norte,66666666666,CDE3C33,2025-12-03,180,600,02:45:00,C,66666666666;77777777777"
+id,nome_rota,descricao,motorista_cpf,veiculo_placa,data_rota,capacidade_total_utilizada,km_total_estimado,tempo_estimado,status_rota,clientes_cpfs
+1,Rota Norte,Entrega zona norte,12312312312,ABC1A11,2024-04-01,500,40,02:30:00,P,11111111111;22222222222;33333333333
+2,Rota Sul,Entrega zona sul,34534534534,BCD2B22,2024-04-02,900,55,03:10:00,A,44444444444;55555555555
+3,Rota Central,Entrega regi√£o central,23423423423,CDE3C33,2024-04-03,1200,70,04:00:00,P,66666666666;77777777777;88888888888
+4,Rota Expressa,Entrega urgente,67867867867,DEF4D44,2024-04-04,300,20,01:15:00,C,99999999999;10101010101
