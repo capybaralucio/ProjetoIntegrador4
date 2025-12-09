@@ -28,8 +28,27 @@ class Command(BaseCommand):
                     }
                 )
 
-        self.stdout.write(self.style.SUCESS('Clientes importados'))
+        self.stdout.write(self.style.SUCCESS('Motoristas importados'))
 
+        #Cliente
+
+        with open('csv/clientes.csv', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                cliente = Cliente.objects.get_or_create(
+                    cpf_cliente=row['cpf_cliente'],
+                    defaults={
+                        'nome_cliente': row['nome_cliente'],
+                        'telefone': row['telefone'],
+                        'endereco': row['endereco'],
+                        'status_cliente': row['status_cliente'],
+                        'data_cadastro': row['data_cadastro']
+                    }
+                )
+
+        self.stdout.write(self.style.SUCCESS('Clientes importados'))
+        
 
         #Veículo
 
@@ -124,3 +143,4 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('IMPORTAÇÃO COMPLETA'))
 
         #python manage.py importar_csv
+
