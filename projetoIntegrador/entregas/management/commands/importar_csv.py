@@ -2,8 +2,21 @@ import os
 import csv
 from django.core.management.base import BaseCommand
 from django.conf import settings
-
+from datetime import timedelta
 from entregas.models import Cliente, Motorista, Veiculo, Rota, Entrega
+
+
+def converter_tempo(texto):
+    if not texto:
+        return None
+
+    h, m, s = texto.split(":")
+
+    return timedelta(
+        hours=int(h),
+        minutes=int(m),
+        seconds=int(s),
+    )
 
 
 class Command(BaseCommand):
@@ -116,7 +129,7 @@ class Command(BaseCommand):
                                 "data_rota": row["data_rota"],
                                 "capacidade_total_utilizada": row["capacidade_total_utilizada"],
                                 "km_total_estimado": row["km_total_estimado"],
-                                "tempo_estimado": row["tempo_estimado"],
+                                "tempo_estimado": converter_tempo(row["tempo_estimado"]),
                                 "status_rota": row["status_rota"],
                             }
                         )
