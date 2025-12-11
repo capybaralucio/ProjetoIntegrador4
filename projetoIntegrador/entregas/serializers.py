@@ -60,12 +60,73 @@ class RotaSerializer(serializers.ModelSerializer):
 
         return data
     
-
 class RotaDashboardSerializer(serializers.ModelSerializer):
-    motorista = MotoristaSerializer(read_only=True)
-    veiculo = VeiculoSerializer(read_only=True)
-    entregas = EntregaSerializer(many=True, source='entrega_set', read_only=True)
+    motorista = serializers.SerializerMethodField()
+    veiculo = serializers.SerializerMethodField()
+    entregas = serializers.SerializerMethodField()
+    capacidade_disponivel = serializers.SerializerMethodField()
 
     class Meta:
         model = Rota
-        fields = ['id', 'nome_rota', 'descricao', 'motorista', 'veiculo', 'entregas']
+        fields = [
+            'id',
+            'nome_rota',
+            'descricao',
+            'motorista',
+            'veiculo',
+            'entregas',
+            'capacidade_total_utilizada',
+            'capacidade_disponivel',
+            'status_rota',
+            'data_rota',
+            'km_total_estimado',
+            'tempo_estimado'
+        ]
+
+    def get_motorista(self, obj):
+        if obj.motorista:
+            return {
+                "cpf": obj.motorista.cpf,
+                "nome_motorista": obj.motorista.nome_motorista,
+                "telefone": obj.motorista.telefone,
+                "status_motorista": obj.motorista.status_motorista,
+                "cnh": obj.motorista.cnh
+            }
+        return None
+
+    def get_veiculo(self, obj):
+        if obj.veiculo:
+            return {
+                "placa": obj.veiculo.placa,
+                "modelo": obj.veiculo.modelo,
+                "tipo": obj.veiculo.tipo,
+                "status_veiculo": obj.veiculo.status_veiculo,
+                "capacidade_maxima": obj.veiculo.capacidade_maxima,
+                "km_atual": obj.veiculo.km_atual
+            }
+        return None
+
+    def get_entregas(self, obj):
+        entregas = obj.entrega_set.all()
+        return [
+            {
+                "codigo_rastreio": e.codigo_rastreio,
+                "cliente": e.cliente.nome_cliente,
+                "endereco_origem": e.endereco_origem,
+                "endereco_destino": e.endereco_destino,
+                "capacidade_necessaria": e.capacidade_necessaria,
+                "status": e.status,
+                "data_solicitacao": e.data_solicitacao,
+                "data_entrega_prevista": e.data_entrega_prevista,
+                "data_entrega_real": e.data_entrega_real,
+                "valor_frete": e.valor_frete,
+                "observacoes": e.observacoes
+            }
+            for e in entregas
+        ]
+
+    def get_capacidade_disponivel(self, obj):
+        if obj.veiculo:
+            return obj.veiculo.capacidade_maxima - obj.capacidade_total_utilizada
+        return None
+

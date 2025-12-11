@@ -152,7 +152,7 @@ class EntregaViewSet(viewsets.ModelViewSet):
 
         return Entrega.objects.none()  
     
-    
+
 @api_view(['GET'])
 def rota_dashboard(request, pk):
     try:
@@ -160,6 +160,47 @@ def rota_dashboard(request, pk):
     except Rota.DoesNotExist:
         return Response({"error": "Rota não encontrada"}, status=404)
 
+    # Serializa a rota básica (motorista, veículo)
     serializer = RotaDashboardSerializer(rota)
-    return Response(serializer.data)
+    data = serializer.data
+
+    # Calcula capacidade utilizada e disponível
+    entregas = rota.entrega_set.select_related('cliente').all()
+    capacidade_utilizada = sum(e.capacidade_necessaria for e in entregas)
+    capacidade_disponivel = rota.veiculo.capacidade_maxima - capacidade_utilizada
+
+    # Monta lista de entregas detalhadas
+    entregas_detalhadas = []
+    for e in entregas:
+        entregas_detalhadas.append({
+            "codigo_rastreio": e.codigo_rastreio,
+            "status": e.status,
+            "capacidade_necessaria": e.capacidade_necessaria,
+            "endereco_origem": e.endereco_origem,
+            "endereco_destino": e.endereco_destino,
+            "data_entrega_prevista": e.data_entrega_prevista,
+            "data_entrega_real": e.data_entrega_real,
+            "cliente": {
+                "cpf": e.cliente.cpf_cliente,
+                "nome": e.cliente.nome_cliente,
+                "endereco": e.cliente.endereco,
+                "cidade": e.cliente.cidade,
+                "estado": e.cliente.estado,
+                "bairro": e.cliente.bairro,
+                "cep": e.cliente.cep,
+                "telefone": e.cliente.telefone,
+                "email": e.cliente.email,
+            },
+            "observacoes": e.observacoes,
+            "valor_frete": e.valor_frete,
+        })
+
+    # Adiciona campos extras ao retorno
+    data['capacidade_total_utilizada'] = capacidade_utilizada
+    data['capacidade_disponivel'] = capacidade_disponivel
+    data['entregas'] = entregas_detalhadas
+
+    return Response(data)
+
+
 
