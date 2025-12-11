@@ -59,3 +59,13 @@ class RotaSerializer(serializers.ModelSerializer):
             })
 
         return data
+    
+
+class RotaDashboardSerializer(serializers.ModelSerializer):
+    motorista = MotoristaSerializer(read_only=True)
+    veiculo = VeiculoSerializer(read_only=True)
+    entregas = EntregaSerializer(many=True, source='entrega_set', read_only=True)
+
+    class Meta:
+        model = Rota
+        fields = ['id', 'nome_rota', 'descricao', 'motorista', 'veiculo', 'entregas']

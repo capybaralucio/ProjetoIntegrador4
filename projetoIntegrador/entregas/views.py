@@ -1,14 +1,13 @@
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.authentication import TokenAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
-
+from rest_framework.response import Response
 from .models import Motorista, Veiculo, Cliente, Rota, Entrega
 from .serializers import (
     MotoristaSerializer, VeiculoSerializer, ClienteSerializer,
-    RotaSerializer, EntregaSerializer
+    RotaSerializer, EntregaSerializer, RotaDashboardSerializer
 )
 from .permissions import IsAdmin, IsMotorista, IsCliente
 
@@ -53,24 +52,24 @@ class VeiculoViewSet(viewsets.ModelViewSet):
 
         return Veiculo.objects.none()   
     
-# ------------------- ação: VINCULAR MOTORISTA ----------------------
-@action(detail=True, methods=["post"], permission_classes=[IsAdmin])    
-def vincular_motorista(self, request, pk=None):
-    veiculo = self.get_object()
-    motorista_cpf = request.data.get("cpf")
+    # ------------------- ação: VINCULAR MOTORISTA ----------------------
+    @action(detail=True, methods=["post"], permission_classes=[IsAdmin])    
+    def vincular_motorista(self, request, pk=None):
+        veiculo = self.get_object()
+        motorista_cpf = request.data.get("cpf")
 
-    if not motorista_cpf:
-        return Response({"erro": "CPF do motorista é obrigatório"}, status=400)
+        if not motorista_cpf:
+            return Response({"erro": "CPF do motorista é obrigatório"}, status=400)
 
-    try: 
-        motorista = Motorista.objects.get(cpf=motorista_cpf)
-    except Motorista.DoesNotExist:
-        return Response ({"erro": "Motorista não encontrado"}, status=404)
+        try: 
+            motorista = Motorista.objects.get(cpf=motorista_cpf)
+        except Motorista.DoesNotExist:
+            return Response ({"erro": "Motorista não encontrado"}, status=404)
 
-    veiculo.motorista_ativo = motorista
-    veiculo.save()
+        veiculo.motorista_ativo = motorista
+        veiculo.save()
 
-    return Response({"mensagem": "Motorista vinculado com sucesso!"})
+        return Response({"mensagem": "Motorista vinculado com sucesso!"})
 
 
 # ------------------- CLIENTE ------------------------
@@ -153,3 +152,14 @@ class EntregaViewSet(viewsets.ModelViewSet):
 
         return Entrega.objects.none()  
     
+    
+@api_view(['GET'])
+def rota_dashboard(request, pk):
+    try:
+        rota = Rota.objects.get(pk=pk)
+    except Rota.DoesNotExist:
+        return Response({"error": "Rota não encontrada"}, status=404)
+
+    serializer = RotaDashboardSerializer(rota)
+    return Response(serializer.data)
+
