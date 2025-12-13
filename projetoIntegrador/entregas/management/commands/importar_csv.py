@@ -1,22 +1,31 @@
 import os
 import csv
+from datetime import timedelta, datetime
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from datetime import timedelta
+from django.core.exceptions import ValidationError
 from entregas.models import Cliente, Motorista, Veiculo, Rota, Entrega
 
 
 def converter_tempo(texto):
+    """Converte string hh:mm:ss em timedelta"""
     if not texto:
         return None
+    try:
+        h, m, s = map(int, texto.split(":"))
+        return timedelta(hours=h, minutes=m, seconds=s)
+    except Exception:
+        return None
 
-    h, m, s = texto.split(":")
 
-    return timedelta(
-        hours=int(h),
-        minutes=int(m),
-        seconds=int(s),
-    )
+def converter_data(texto):
+    """Converte string YYYY-MM-DD em date"""
+    if not texto:
+        return None
+    try:
+        return datetime.strptime(texto, "%Y-%m-%d").date()
+    except Exception:
+        return None
 
 
 class Command(BaseCommand):
@@ -26,11 +35,11 @@ class Command(BaseCommand):
         base_dir = settings.BASE_DIR
         csv_folder = os.path.join(base_dir, "csv")
 
-        print(f"BASE_DIR real: {base_dir}")
-        print(f"Lendo arquivos em: {csv_folder}")
+        self.stdout.write(f"BASE_DIR real: {base_dir}")
+        self.stdout.write(f"Lendo arquivos em: {csv_folder}")
 
         if not os.path.exists(csv_folder):
-            print("ERRO: pasta CSV não encontrada")
+            self.stdout.write("ERRO: pasta CSV não encontrada")
             return
 
         order = [
@@ -43,19 +52,15 @@ class Command(BaseCommand):
 
         for file_name in order:
             file_path = os.path.join(csv_folder, file_name)
-
             if not os.path.exists(file_path):
-                print(f"Arquivo não encontrado: {file_name}")
+                self.stdout.write(f"Arquivo não encontrado: {file_name}")
                 continue
 
-            print(f"\n Importando: {file_name}")
+            self.stdout.write(f"\nImportando: {file_name}")
 
             with open(file_path, newline="", encoding="utf-8") as csvfile:
                 reader = csv.DictReader(csvfile)
 
-                # ------------------------------
-                #  CLIENTES
-                # ------------------------------
                 if file_name == "clientes.csv":
                     for row in reader:
                         Cliente.objects.update_or_create(
@@ -72,9 +77,6 @@ class Command(BaseCommand):
                             }
                         )
 
-                # ------------------------------
-                #  MOTORISTAS
-                # ------------------------------
                 elif file_name == "motoristas.csv":
                     for row in reader:
                         Motorista.objects.update_or_create(
@@ -82,42 +84,46 @@ class Command(BaseCommand):
                             defaults={
                                 "nome_motorista": row["nome_motorista"],
                                 "telefone": row["telefone"],
-                                "data_cadastro": row["data_cadastro"],
+                                "data_cadastro": converter_data(row["data_cadastro"]),
                                 "cnh": row["cnh"],
                                 "status_motorista": row["status_motorista"],
                             }
                         )
 
-                # ------------------------------
-                #  VEÍCULOS
-                # ------------------------------
                 elif file_name == "veiculos.csv":
                     for row in reader:
-
                         motorista = None
-                        if row["motorista_cpf"]:
+                        if row.get("motorista_cpf"):
                             motorista = Motorista.objects.filter(cpf=row["motorista_cpf"]).first()
 
-                        Veiculo.objects.update_or_create(
+                        veiculo, created = Veiculo.objects.update_or_create(
                             placa=row["placa"],
                             defaults={
                                 "modelo": row["modelo"],
-                                "capacidade_maxima": row["capacidade_maxima"],
-                                "km_atual": row["km_atual"],
+                                "capacidade_maxima": int(row["capacidade_maxima"] or 0),
+                                "km_atual": int(row["km_atual"] or 0),
                                 "tipo": row["tipo"],
                                 "status_veiculo": row["status_veiculo"],
                                 "motorista_ativo": motorista,
                             }
                         )
 
-                # ------------------------------
-                #  ROTAS
-                # ------------------------------
+                        # valida compatibilidade CNH
+                        try:
+                            veiculo.full_clean()
+                            veiculo.save()
+                        except ValidationError as e:
+                            self.stdout.write(f"Erro no veículo {veiculo.placa}: {e}")
+                            continue
+
                 elif file_name == "rotas.csv":
                     for row in reader:
+                        motorista = Motorista.objects.filter(cpf=row.get("motorista_cpf")).first()
+                        veiculo = Veiculo.objects.filter(placa=row.get("veiculo_placa")).first()
 
-                        motorista = Motorista.objects.filter(cpf=row["motorista_cpf"]).first()
-                        veiculo = Veiculo.objects.filter(placa=row["veiculo_placa"]).first()
+                        if not motorista or not veiculo:
+                            self.stdout.write(f"Pular rota {row.get('id')}: motorista ou veículo não encontrado")
+                            continue
 
                         rota, _ = Rota.objects.update_or_create(
                             id=row["id"],
@@ -126,45 +132,50 @@ class Command(BaseCommand):
                                 "descricao": row["descricao"],
                                 "motorista": motorista,
                                 "veiculo": veiculo,
-                                "data_rota": row["data_rota"],
-                                "capacidade_total_utilizada": row["capacidade_total_utilizada"],
-                                "km_total_estimado": row["km_total_estimado"],
-                                "tempo_estimado": converter_tempo(row["tempo_estimado"]),
+                                "data_rota": converter_data(row["data_rota"]),
+                                "capacidade_total_utilizada": int(row.get("capacidade_total_utilizada") or 0),
+                                "km_total_estimado": int(row.get("km_total_estimado") or 0),
+                                "tempo_estimado": converter_tempo(row.get("tempo_estimado")),
                                 "status_rota": row["status_rota"],
                             }
                         )
 
-                        # Adiciona clientes (ManyToMany)
-                        clientes_ids = row["clientes_cpfs"].split(";")
-                        clientes = Cliente.objects.filter(cpf_cliente__in=clientes_ids)
-                        rota.clientes.set(clientes)
+                        clientes_cpfs = row.get("clientes_cpfs", "")
+                        if clientes_cpfs:
+                            clientes_ids = clientes_cpfs.split(";")
+                            clientes = Cliente.objects.filter(cpf_cliente__in=clientes_ids)
+                            rota.clientes.set(clientes)
 
-                # ------------------------------
-                #  ENTREGAS
-                # ------------------------------
                 elif file_name == "entregas.csv":
                     for row in reader:
+                        cliente = Cliente.objects.filter(cpf_cliente=row.get("cliente_cpf")).first()
+                        rota = Rota.objects.filter(id=row.get("rota_id")).first() if row.get("rota_id") else None
 
-                        cliente = Cliente.objects.filter(cpf_cliente=row["cliente_cpf"]).first()
-                        rota = Rota.objects.filter(id=row["rota_id"]).first()
+                        if not cliente:
+                            self.stdout.write(f"Pular entrega {row.get('codigo_rastreio')}: cliente não encontrado")
+                            continue
+
+                        if row.get("rota_id") and not rota:
+                            self.stdout.write(f"Pular entrega {row.get('codigo_rastreio')}: rota não encontrada")
+                            continue
 
                         Entrega.objects.update_or_create(
                             codigo_rastreio=row["codigo_rastreio"],
                             defaults={
-                                "data_entrega_real": row["data_entrega_real"] or None,
-                                "capacidade_necessaria": row["capacidade_necessaria"],
+                                "data_entrega_real": converter_data(row.get("data_entrega_real")),
+                                "capacidade_necessaria": int(row.get("capacidade_necessaria") or 0),
                                 "endereco_origem": row["endereco_origem"],
-                                "observacoes": row["observacoes"],
+                                "observacoes": row.get("observacoes"),
                                 "endereco_destino": row["endereco_destino"],
-                                "valor_frete": row["valor_frete"],
-                                "data_entrega_prevista": row["data_entrega_prevista"],
-                                "data_solicitacao": row["data_solicitacao"],
+                                "valor_frete": float(row.get("valor_frete") or 0),
+                                "data_entrega_prevista": converter_data(row.get("data_entrega_prevista")),
+                                "data_solicitacao": converter_data(row.get("data_solicitacao")),
                                 "cliente": cliente,
                                 "rota": rota,
                                 "status": row["status"],
                             }
                         )
 
-            print(f"Finalizado: {file_name}")
+            self.stdout.write(f"Finalizado: {file_name}")
 
-        print("\nIMPORTAÇÃO CONCLUÍDA COM SUCESSO!")
+        self.stdout.write("\nIMPORTAÇÃO CONCLUÍDA COM SUCESSO!")

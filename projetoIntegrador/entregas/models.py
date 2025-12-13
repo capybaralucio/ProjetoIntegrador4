@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 class Motorista(models.Model):
@@ -54,7 +55,7 @@ class Veiculo(models.Model):
     modelo = models.CharField(max_length=200, null=False)
     capacidade_maxima = models.IntegerField( null=False)
     km_atual = models.IntegerField(null=False)
-    motorista_ativo = models.ForeignKey(Motorista, on_delete=models.SET_NULL, null=True, blank=True, unique=True)
+    motorista_ativo = models.OneToOneField(Motorista, on_delete=models.SET_NULL, null=True, blank=True)
     tipo = models.CharField(
         max_length=1,
         choices=Tipo.choices,
@@ -80,13 +81,13 @@ class Veiculo(models.Model):
 
             if cnh not in tipos_validos:
                 raise ValidationError(
-                    f"O motorista {self.motorista_ativo.nome_motorista} possui CNH {cnh},"
-                    f"mas o veículo {self.get_tipo_display()} exige: {', ' .join(tipos_validos)}."
+                    f"O motorista {self.motorista_ativo.nome_motorista} possui CNH {cnh}, "
+                    f"mas o veículo {self.get_tipo_display()} exige: {', '.join(tipos_validos)}."
                 )
 
-def save(self, *args, **kwargs):
-    self.clean() #chama a validação antes de salvar
-    super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.full_clean() #chama a validação antes de salvar
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.placa
