@@ -9,12 +9,14 @@ from .serializers import (
     MotoristaSerializer, VeiculoSerializer, ClienteSerializer,
     RotaSerializer, EntregaSerializer, RotaDashboardSerializer
 )
-from .permissions import IsAdmin, IsMotorista, IsCliente
-
+from .permissions import (
+    IsAdmin, IsMotorista, IsCliente, 
+    IsMotoristaOrAdmin, IsClienteOrAdmin, IsAnyUser
+)
 # ------------------- MOTORISTA ------------------------
 class MotoristaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsMotorista | IsAdmin]
+    permission_classes = [IsMotoristaOrAdmin]
     
     queryset = Motorista.objects.all()
     serializer_class = MotoristaSerializer  
@@ -34,7 +36,7 @@ class MotoristaViewSet(viewsets.ModelViewSet):
 # ------------------- VEICULO ------------------------
 class VeiculoViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsMotorista | IsAdmin]
+    permission_classes = [IsMotoristaOrAdmin]
     
     queryset = Veiculo.objects.all()
     serializer_class = VeiculoSerializer 
@@ -82,7 +84,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method == "GET":
             return [permissions.IsAuthenticated()]
-        return [IsCliente() | IsAdmin()]
+        return [IsMotoristaOrAdmin()]
     
     def get_queryset(self): # restringe o acesso conforme o usuário
         user = self.request.user
@@ -99,7 +101,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 # ------------------- ROTA ------------------------
 class RotaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAdmin | IsMotorista]
+    permission_classes = [IsClienteOrAdmin]
     
     queryset = Rota.objects.all()
     serializer_class = RotaSerializer
@@ -120,7 +122,7 @@ class RotaViewSet(viewsets.ModelViewSet):
 # ------------------- ENTREGA ------------------------
 class EntregaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAdmin | IsMotorista | IsCliente] 
+    permission_classes = [IsAnyUser] 
     
     queryset = Entrega.objects.all()
     serializer_class = EntregaSerializer  
@@ -133,7 +135,7 @@ class EntregaViewSet(viewsets.ModelViewSet):
             permission_classes = [AllowAny]
         else:
             # POST/PUT/DELETE apenas para usuários logados/admin
-            permission_classes = [IsCliente | IsAdmin]
+            permission_classes = [IsClienteOrAdmin]
         return [permission() for permission in permission_classes] 
     
     def get_queryset(self):
