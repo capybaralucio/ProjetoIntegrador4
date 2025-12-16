@@ -1,42 +1,69 @@
 from rest_framework import serializers
 from .models import Motorista, Veiculo, Cliente, Rota, Entrega  
 
+
+# ============================
+# SERIALIZER: MOTORISTA
+# Responsável por converter dados do Motorista
+# entre Python <-> JSON
+# ============================
 class MotoristaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Motorista
         fields = '__all__'
-        
+
+# ============================
+# SERIALIZER: VEÍCULO
+# ============================
 class VeiculoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Veiculo
         fields = '__all__'  
         
+# ============================
+# SERIALIZER: CLIENTE
+# ============================
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
         fields = '__all__'  
         
+# ============================
+# SERIALIZER: ENTREGA
+# Observação:
+# - A entrega pode existir SEM rota inicialmente
+# ============================
 class EntregaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entrega
         fields = '__all__'
         extra_kwargs = {
+            # Permite criar entrega sem rota atribuída
             "rota": {"required": False, "allow_null": True}
         }
         
+# ============================
+# SERIALIZER: ROTA
+# - Exibe as entregas associadas
+# - Valida capacidade do veículo
+# ============================
 class RotaSerializer(serializers.ModelSerializer):
-    # mostra as entregas desta rota (somente leitura)
+    # Lista as entregas associadas à rota (somente leitura)
     entregas = EntregaSerializer(many=True, read_only=True, source='entrega_set')
 
     class Meta:
         model = Rota
         fields = '__all__'
 
-    # Validação da capacidade total
+    # ----------------------------
+    # VALIDAÇÃO DE REGRA DE NEGÓCIO
+    # Soma das capacidades das entregas
+    # não pode exceder a capacidade do veículo
+    # ----------------------------
     def validate(self, data):
-        rota = self.instance  # rota sendo atualizada, se existir
+        rota = self.instance    # rota existente (em update)
 
-        # pega o veículo escolhido
+        # Obtém o veículo atual ou o novo veículo informado
         veiculo = data.get("veiculo") or (rota.veiculo if rota else None)
 
         if not veiculo:
@@ -44,12 +71,14 @@ class RotaSerializer(serializers.ModelSerializer):
 
         capacidade_max = veiculo.capacidade_maxima
 
-        # soma das entregas
+        # Soma das capacidades das entregas já associadas
         entregas = Entrega.objects.filter(rota=rota) if rota else []
         capacidade_utilizada = sum(e.capacidade_necessaria for e in entregas)
 
+        # Capacidade informada manualmente (se houver)
         nova_capacidade = data.get("capacidade_total_utilizada", capacidade_utilizada)
 
+        # Validação final
         if nova_capacidade > capacidade_max: 
             raise serializers.ValidationError({
                 "capacidade_total_utilizada": (
@@ -60,6 +89,10 @@ class RotaSerializer(serializers.ModelSerializer):
 
         return data
     
+# ============================
+# SERIALIZER: DASHBOARD DA ROTA
+# Endpoint de composição (A+B+C+D)
+# ============================
 class RotaDashboardSerializer(serializers.ModelSerializer):
     motorista = serializers.SerializerMethodField()
     veiculo = serializers.SerializerMethodField()
@@ -83,6 +116,7 @@ class RotaDashboardSerializer(serializers.ModelSerializer):
             'tempo_estimado'
         ]
 
+    # Retorna dados resumidos do motorista
     def get_motorista(self, obj):
         if obj.motorista:
             return {
@@ -94,6 +128,7 @@ class RotaDashboardSerializer(serializers.ModelSerializer):
             }
         return None
 
+    # Retorna dados do veículo utilizado
     def get_veiculo(self, obj):
         if obj.veiculo:
             return {
@@ -106,6 +141,7 @@ class RotaDashboardSerializer(serializers.ModelSerializer):
             }
         return None
 
+    # Lista todas as entregas da rota
     def get_entregas(self, obj):
         entregas = obj.entrega_set.all()
         return [
@@ -125,6 +161,7 @@ class RotaDashboardSerializer(serializers.ModelSerializer):
             for e in entregas
         ]
 
+    # Calcula capacidade disponível do veículo
     def get_capacidade_disponivel(self, obj):
         if obj.veiculo:
             return obj.veiculo.capacidade_maxima - obj.capacidade_total_utilizada

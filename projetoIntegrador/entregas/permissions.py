@@ -2,26 +2,35 @@
 
 from rest_framework.permissions import BasePermission
 
-
+# ============================
+# ADMINISTRADOR
+# Acesso total ao sistema
+# ============================
 class IsAdmin(BasePermission):
-#----------------Usuário admin tem acesso total.
     def has_permission(self, request, view):
         return request.user.is_staff
 
-
+# ============================
+# MOTORISTA
+# Pode acessar apenas seus dados
+# ============================
 class IsMotorista(BasePermission):
-#----------------Motorista só pode ver suas rotas/entregas.
     def has_permission(self, request, view):
         return request.user.is_authenticated and hasattr(request.user, "motorista")
 
 
+# ============================
+# CLIENTE
+# Apenas visualização das próprias entregas
+# ============================
 class IsCliente(BasePermission):
-#----------------Cliente só pode ver suas entregas.
     def has_permission(self, request, view):
         return request.user.is_authenticated and hasattr(request.user, "cliente") 
 
+# ============================
+# MOTORISTA OU ADMIN
+# ============================
 class IsMotoristaOrAdmin(BasePermission):
-#----------------Diferenciacão do Motorista pro Admin.
     def has_permission(self, request, view):
         user = request.user
         return (
@@ -30,8 +39,10 @@ class IsMotoristaOrAdmin(BasePermission):
             )
         )
 
+# ============================
+# CLIENTE OU ADMIN
+# ============================
 class IsClienteOrAdmin(BasePermission):
-#----------------Diferenciacão do Cliente pro Admin.
     def has_permission(self, request, view):
         user = request.user
         return (
@@ -40,6 +51,9 @@ class IsClienteOrAdmin(BasePermission):
             )
         )
 
+# ============================
+# QUALQUER USUÁRIO AUTENTICADO
+# ============================
 class IsAnyUser(BasePermission):
 #----------------escolhe Admin ou Motorista ou Cliente
     def has_permission(self, request, view):
