@@ -7,12 +7,14 @@ from django.core.exceptions import ValidationError
 # ---------- MOTORISTA ----------
 class Motorista(models.Model):
 
+    # Tipos de CNH permitidos
     class Cnh(models.TextChoices):
         B = 'B', 'B'
         C = 'C', 'C'
         D = 'D', 'D'
         E = 'E', 'E'
 
+    # Status do motorista
     class Status_motorista(models.TextChoices):
         ATIVO = 'A', 'Motorista ativo'
         INATIVO = 'I', 'Motorista inativo'
@@ -34,6 +36,7 @@ class Motorista(models.Model):
         choices=Status_motorista.choices,
         default=Status_motorista.DISPONIVEL
     )
+    # Vínculo com usuário do sistema
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
@@ -44,11 +47,13 @@ class Motorista(models.Model):
 # ---------- VEÍCULO ----------
 class Veiculo(models.Model):
 
+    # Tipos de veículo
     class Tipo(models.TextChoices):
         CARRO = '1', 'Carro'
         VAN = '2', 'Van'
         CAMINHAO = '3', 'Caminhão'
 
+    # Status do veículo
     class Status_veiculo(models.TextChoices):
         DISPONIVEL = 'D', 'Disponível'
         EM_USO = 'U', 'Em uso'
@@ -70,6 +75,7 @@ class Veiculo(models.Model):
         default=Status_veiculo.DISPONIVEL
     )
 
+    # Valida compatibilidade entre CNH e tipo de veículo
     def clean(self):
         if self.motorista_ativo:
             cnh = self.motorista_ativo.cnh
@@ -88,9 +94,9 @@ class Veiculo(models.Model):
                     f"mas o veículo {self.get_tipo_display()} exige: {', '.join(tipos_validos)}."
                 )
 
+    # Garante validação antes de salvar
     def save(self, *args, **kwargs):
-        self.full_clean() #chama a validação antes de salvar
-        super().save(*args, **kwargs)
+        self.full_clean() 
 
     def __str__(self):
         return self.placa
