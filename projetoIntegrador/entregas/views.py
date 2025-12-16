@@ -16,7 +16,6 @@ from .permissions import (
 )
 
 
-
 # ------------------- MOTORISTA ------------------------
 class MotoristaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]

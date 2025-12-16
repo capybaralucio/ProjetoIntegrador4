@@ -167,3 +167,6 @@ class RotaDashboardSerializer(serializers.ModelSerializer):
             return obj.veiculo.capacidade_maxima - obj.capacidade_total_utilizada
         return None
 
+class AuthTokenSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()

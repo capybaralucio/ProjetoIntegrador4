@@ -1,6 +1,6 @@
 python -m venv meuAmbiente
 meuAmbiente\Scripts\activate
-
+cd projetoIntegrador
 pip install django
 pip install djangorestframework
 pip install django-filter
@@ -11,7 +11,7 @@ pip install drf-spectacular[sidecar]
 
 python manage.py makemigrations
 python manage.py migrate
-
+python manage.py importar_csv
 python manage.py runserver
 
 python manage.py createsuperuser
