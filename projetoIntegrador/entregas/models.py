@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 
+
+# ---------- MOTORISTA ----------
 class Motorista(models.Model):
 
     class Cnh(models.TextChoices):
@@ -39,6 +41,7 @@ class Motorista(models.Model):
 
 
 
+# ---------- VEÍCULO ----------
 class Veiculo(models.Model):
 
     class Tipo(models.TextChoices):
@@ -53,8 +56,8 @@ class Veiculo(models.Model):
 
     placa = models.CharField(max_length=8, primary_key=True)
     modelo = models.CharField(max_length=200, null=False)
-    capacidade_maxima = models.IntegerField( null=False)
-    km_atual = models.IntegerField(null=False)
+    capacidade_maxima = models.PositiveIntegerField( null=False)
+    km_atual = models.PositiveIntegerField(null=False)
     motorista_ativo = models.OneToOneField(Motorista, on_delete=models.SET_NULL, null=True, blank=True)
     tipo = models.CharField(
         max_length=1,
@@ -93,6 +96,8 @@ class Veiculo(models.Model):
         return self.placa
 
 
+
+# ---------- CLIENTE ----------
 class Cliente(models.Model):
     cpf_cliente = models.CharField(max_length=11, primary_key=True)
     nome_cliente = models.CharField(max_length=200, null=False)
@@ -108,6 +113,9 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nome_cliente
      
+
+
+# ---------- ROTA ----------
 class Rota(models.Model):
 
     class Status_rota(models.TextChoices):
@@ -133,6 +141,9 @@ class Rota(models.Model):
     def __str__(self):
         return self.nome_rota
     
+
+
+# ---------- ENTREGA ----------
 class Entrega(models.Model):
 
     class Status_entrega(models.TextChoices):
@@ -152,7 +163,8 @@ class Entrega(models.Model):
     data_entrega_prevista = models.DateField(null=False)
     data_solicitacao = models.DateField(null=False)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    rota = models.ForeignKey(Rota, on_delete=models.CASCADE)
+    motorista = models.ForeignKey(Motorista, on_delete=models.SET_NULL, null=True, blank=True)
+    rota = models.ForeignKey(Rota, on_delete=models.SET_NULL, null = True, blank= True)
     status = models.CharField(
          max_length=1,
          choices=Status_entrega.choices,

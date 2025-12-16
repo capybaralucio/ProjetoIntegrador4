@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
@@ -13,16 +14,22 @@ from .permissions import (
     IsAdmin, IsMotorista, IsCliente, 
     IsMotoristaOrAdmin, IsClienteOrAdmin, IsAnyUser
 )
+
+
+
 # ------------------- MOTORISTA ------------------------
 class MotoristaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsMotoristaOrAdmin]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     
     queryset = Motorista.objects.all()
     serializer_class = MotoristaSerializer  
     
     def get_queryset(self): # restringe o acesso conforme o usuário
         user = self.request.user
+
+        if not user.is_authenticated:
+            return Motorista.objects.all()
 
         if user.is_staff:
             return Motorista.objects.all()
@@ -33,6 +40,8 @@ class MotoristaViewSet(viewsets.ModelViewSet):
 
         return Motorista.objects.none()
     
+
+
 # ------------------- VEICULO ------------------------
 class VeiculoViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -54,24 +63,44 @@ class VeiculoViewSet(viewsets.ModelViewSet):
 
         return Veiculo.objects.none()   
     
-    # ------------------- ação: VINCULAR MOTORISTA ----------------------
-    @action(detail=True, methods=["post"], permission_classes=[IsAdmin])    
-    def vincular_motorista(self, request, pk=None):
-        veiculo = self.get_object()
-        motorista_cpf = request.data.get("cpf")
 
-        if not motorista_cpf:
-            return Response({"erro": "CPF do motorista é obrigatório"}, status=400)
+
+    # ------------------- ação: ATRIBUIR UM MOTORISTA A UM VEÍCULO ----------------------
+    @action(detail=True, methods=["put"], permission_classes=[IsAdmin])    
+    def atribuir_veiculo(self, request, pk=None):
+        motorista = self.get_object()
+        placa = request.data.get("placa")
+
+        if not placa:
+            return Response({"erro": "Placa do veículo é obrigatória"}, status=400)
 
         try: 
-            motorista = Motorista.objects.get(cpf=motorista_cpf)
-        except Motorista.DoesNotExist:
-            return Response ({"erro": "Motorista não encontrado"}, status=404)
+            veiculo = Veiculo.objects.get(placa=placa, status="D")
+        except Veiculo.DoesNotExist:
+            return Response ({"erro": "Veículo não disponível"}, status=404)
 
         veiculo.motorista_ativo = motorista
+        veiculo.status_veiculo = "U" # em uso
         veiculo.save()
 
-        return Response({"mensagem": "Motorista vinculado com sucesso!"})
+        return Response({"mensagem": "Veículo atribuído ao motorista com sucesso!"})
+    
+
+    # ------------------- ação: LIBERAR UM VEÍCULO ----------------------
+    @action(detail=True, methods=["put"], permission_classes=[IsAdmin])
+    def liberar_veiculo(self, request, pk=None):
+        motorista = self.get_object()
+
+        veiculo = Veiculo.objects.filter(motorista_ativo=motorista).first()
+        if not veiculo:
+            return Response({"erro": "Motorista não possui veículo"}, status=404)
+        
+        veiculo.motorista_ativo = None
+        veiculo.status_veiculo = "D" # disponível
+        veiculo.save()
+
+        return Response({"mensagem": "Veículo liberado"})
+
 
 
 # ------------------- CLIENTE ------------------------
@@ -98,6 +127,8 @@ class ClienteViewSet(viewsets.ModelViewSet):
 
         return Cliente.objects.none()
     
+
+
 # ------------------- ROTA ------------------------
 class RotaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -119,6 +150,93 @@ class RotaViewSet(viewsets.ModelViewSet):
 
         return Rota.objects.none()
     
+ # ------------------- ação: LISTAR ENTREGAS DA ROTA ---------------------- 
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def entregas(self, request, pk=None):
+        rota = self.get_object()
+        entregas = rota.entrega_set.all()
+        serializer = EntregaSerializer(entregas, many=True)
+        return Response(serializer.data)
+    
+ # ------------------- ação: ADICIONAR ENTREGAS À ROTA ----------------------
+    @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
+    def adicionar_entrega(self, request, pk=None):
+        rota = self.get_object()
+
+
+        if rota.status_rota != "P":
+            return Response(
+                {"erro": "Só é possível adicionar entregas em rotas planejadas"},
+                status=400
+            )
+
+
+        entrega_id = request.data.get("entrega_id")
+
+        if not entrega_id:
+            return Response({"erro": "entrega_id é obrigatório"}, status=400)
+        
+        try:
+            entrega = Entrega.objects.get(id=entrega_id)
+        except Entrega.DoesNotExist:
+            return Response({"erro": "Entrega não encontrada"}, status=404)
+        
+        if entrega.rota:
+            return Response({"erro": "Entrega já está vinculada a uma rota"}, status=400)
+        
+        nova_capacidade = (
+            rota.capacidade_total_utilizada + entrega.capacidade_necessaria
+        )
+
+        if nova_capacidade > rota.veiculo.capacidade_maxima:
+            return Response(
+                {"erro": "Capacidade do veículo excedida"}, status=400
+            )
+        
+        entrega.rota = rota
+        entrega.save()
+
+        rota.capacidade_total_utilizada = nova_capacidade
+        rota.save()
+
+        return Response({"mensagem": "Entrega adicionada à rota com sucesso!"})
+    
+ # ------------------- ação: REMOVER ENTREGA DA ROTA ----------------------
+    @action(detail=True, methods=["delete"], url_path="entregas/(?P<entrega_id>[^/.]+)", permission_classes=[IsAdmin],)
+    def remover_entrega(self, request, pk=None, entrega_id=None):
+        rota = self.get_object()
+
+        try:
+            entrega = Entrega.objects.get(id=entrega_id, rota=rota)
+        except Entrega.DoesNotExist:
+            return Response({"erro": "Entrega não encontrada nesta rota"}, status=404)
+        
+        rota.capacidade_total_utilizada = max(
+            0,
+            rota.capacidade_total_utilizada - entrega.capacidade_necessaria
+        )
+        rota.save()
+
+        entrega.rota = None
+        entrega.save()
+
+        return Response({"mensagem": "Entrega removida da rota"})
+    
+ # ------------------- ação: CAPACIDADE DA ROTA ----------------------
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def capacidade(self, request, pk=None):
+        rota = self.get_object()
+
+        return Response({
+            "capacidade_maxima_veiculo": rota.veiculo.capacidade_maxima,
+            "capacidade_utilizada": rota.capacidade_total_utilizada,
+            "capacidade_disponivel": (
+                rota.veiculo.capacidade_maxima - rota.capacidade_total_utilizada
+            )
+        })
+        
+
+
 # ------------------- ENTREGA ------------------------
 class EntregaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
@@ -139,21 +257,58 @@ class EntregaViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes] 
     
     def get_queryset(self):
+
+        user = self.request.user
+
+
         # Usuário não logado só consegue buscar por código
-        if self.request.method == "GET" and not self.request.user.is_authenticated:
+        if self.request.method == "GET" and not user.is_authenticated:
             codigo = self.request.query_params.get("codigo_rastreio", None)
             if codigo:
                 return Entrega.objects.filter(codigo_rastreio=codigo)
             return Entrega.objects.none()
         # Usuário logado/admin vê suas entregas normalmente
-        user = self.request.user
+
         if user.is_staff:
             return Entrega.objects.all()
         if hasattr(user, "cliente"):
             return Entrega.objects.filter(cliente=user.cliente)
+        if hasattr(user, "motorista"):
+            return Entrega.objects.filter(motorista=user.motorista)
 
-        return Entrega.objects.none()  
+        return Entrega.objects.none()
     
+    
+    def update(self, request, *args, **kwargs):
+        '''
+        validar quem pode atualizar a entrega:
+        ADMIN: atualiza qualquer entrega
+        MOTORISTA: só pode atualizar as próprias entregas
+        CLIENTE OR OTHER: não consegue atualizar
+        '''
+
+        entrega = self.get_object()
+        user = request.user
+
+        if user.is_staff:
+            return super().update(request, *args, **kwargs)
+        
+        if hasattr(user, "motorista") and entrega.motorista == user.motorista:
+            return super().update(request, *args, **kwargs)
+        
+        return Response(
+            {"erro": "Você não tem permissão para alterar esta entrega."}, status=403
+        )
+    
+
+    def partial_update(self, request, *args, **kwargs):
+        '''
+        a mesma validação do update(), porém para atualizações parcias (PATCH)
+        '''
+
+        return self.update(request, *args, **kwargs)
+    
+
 
 @api_view(['GET'])
 def rota_dashboard(request, pk):
