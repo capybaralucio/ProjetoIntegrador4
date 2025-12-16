@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAdminUser,IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
@@ -20,16 +20,23 @@ from .permissions import (
 # ------------------- MOTORISTA ------------------------
 class MotoristaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    
+    permission_classes = [] #será definido no get_permissions
+
     queryset = Motorista.objects.all()
     serializer_class = MotoristaSerializer  
+
+
+    def get_permissions(self):
+        if self.request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticatedOrReadOnly]#usuários autenticados podem ver motoristas
+        return [permission() for permission in permission_classes]
     
+
     def get_queryset(self): # restringe o acesso conforme o usuário
         user = self.request.user
 
-        if not user.is_authenticated:
-            return Motorista.objects.all()
 
         if user.is_staff:
             return Motorista.objects.all()
@@ -39,6 +46,49 @@ class MotoristaViewSet(viewsets.ModelViewSet):
             return Motorista.objects.filter(cpf=user.motorista.cpf)
 
         return Motorista.objects.none()
+
+
+
+# ------------------- ação: ATRIBUIR UM VEÍCULO A UM MOTORISTA ----------------------
+@action(detail=True, methods=["put"], url_path="atribuir-veiculo")
+def atribuir_veiculo(self, request, pk=None):
+    """
+    Atribui um veículo disponível a este motorista.
+    Atualiza o motorista_ativo no veículo e muda status para 'em_uso'.
+    """
+    motorista = self.get_object()
+    placa = request.data.get("placa")  # só envia a placa do veículo
+
+    if not placa:
+        return Response({"erro": "O campo 'placa' é obrigatório."}, status=400)
+
+    try:
+        veiculo = Veiculo.objects.get(placa=placa, status_veiculo="disponível")
+        veiculo.motorista_ativo = motorista
+        veiculo.status_veiculo = "em_uso"
+        veiculo.save()
+        return Response({"status": f"Veículo {placa} atribuído ao motorista {motorista.nome_motorista}."})
+    except Veiculo.DoesNotExist:
+        return Response({"erro": "Veículo não disponível."}, status=400)
+
+
+
+# ------------------- ação: LIBERAR O VEÍCULO DO MOTORISTA ----------------------
+@action(detail=True, methods=["put"], url_path="liberar-veiculo")
+def liberar_veiculo(self, request, pk=None):
+    """
+    Libera o veículo atualmente vinculado ao motorista.
+    Marca o veículo como disponível e remove o vínculo com o motorista.
+    """
+    motorista = self.get_object()
+    try:
+        veiculo = Veiculo.objects.get(motorista_ativo=motorista)
+        veiculo.motorista_ativo = None
+        veiculo.status_veiculo = "disponível"
+        veiculo.save()
+        return Response({"status": f"Veículo {veiculo.placa} liberado do motorista {motorista.nome_motorista}."})
+    except Veiculo.DoesNotExist:
+        return Response({"erro": "Nenhum veículo vinculado a este motorista."}, status=400)
     
 
 
@@ -61,45 +111,18 @@ class VeiculoViewSet(viewsets.ModelViewSet):
         if hasattr(user, "motorista"):
             return Veiculo.objects.filter(motorista_ativo=user.motorista)
 
-        return Veiculo.objects.none()   
-    
+        return Veiculo.objects.none()  
 
 
-    # ------------------- ação: ATRIBUIR UM MOTORISTA A UM VEÍCULO ----------------------
-    @action(detail=True, methods=["put"], permission_classes=[IsAdmin])    
-    def atribuir_veiculo(self, request, pk=None):
-        motorista = self.get_object()
-        placa = request.data.get("placa")
 
-        if not placa:
-            return Response({"erro": "Placa do veículo é obrigatória"}, status=400)
+# ------------------- ação: LISTA TODOS OS VEÍCULOS DISPONÍVEIS ----------------------
+    @action(detail=False, methods=["get"], url_path="disponiveis")
+    def veiculos_disponiveis(self, request):
+        veiculos = Veiculo.objects.filter(status_veiculo="D", motorista_ativo=None)
+        serializer = self.get_serializer(veiculos, many=True)
+        return Response(serializer.data)
 
-        try: 
-            veiculo = Veiculo.objects.get(placa=placa, status="D")
-        except Veiculo.DoesNotExist:
-            return Response ({"erro": "Veículo não disponível"}, status=404)
 
-        veiculo.motorista_ativo = motorista
-        veiculo.status_veiculo = "U" # em uso
-        veiculo.save()
-
-        return Response({"mensagem": "Veículo atribuído ao motorista com sucesso!"})
-    
-
-    # ------------------- ação: LIBERAR UM VEÍCULO ----------------------
-    @action(detail=True, methods=["put"], permission_classes=[IsAdmin])
-    def liberar_veiculo(self, request, pk=None):
-        motorista = self.get_object()
-
-        veiculo = Veiculo.objects.filter(motorista_ativo=motorista).first()
-        if not veiculo:
-            return Response({"erro": "Motorista não possui veículo"}, status=404)
-        
-        veiculo.motorista_ativo = None
-        veiculo.status_veiculo = "D" # disponível
-        veiculo.save()
-
-        return Response({"mensagem": "Veículo liberado"})
 
 
 
@@ -111,10 +134,9 @@ class ClienteViewSet(viewsets.ModelViewSet):
     serializer_class = ClienteSerializer
 
     def get_permissions(self):
-        if self.request.method == "GET":
-            return [permissions.IsAuthenticated()]
-        return [IsMotoristaOrAdmin()]
+        return [permissions.IsAuthenticated()]
     
+
     def get_queryset(self): # restringe o acesso conforme o usuário
         user = self.request.user
 
