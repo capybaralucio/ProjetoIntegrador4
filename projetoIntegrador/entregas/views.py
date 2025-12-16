@@ -153,7 +153,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
 # ------------------- ROTA ------------------------
 class RotaViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsClienteOrAdmin]
+    permission_classes = [IsAuthenticated]
     
     queryset = Rota.objects.all()
     serializer_class = RotaSerializer
@@ -166,8 +166,8 @@ class RotaViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return Rota.objects.all()
 
-        if hasattr(user, "motorista"):
-            return Rota.objects.filter(motorista=user.motorista)
+        if hasattr(user, "cliente"):
+            return Rota.objects.filter(clientes=user.cliente)
 
         return Rota.objects.none()
     
